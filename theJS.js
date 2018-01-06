@@ -1,7 +1,7 @@
 chrome.browserAction.onClicked.addListener(function() {
   var offsetForPinnedTabs = 0
 
-  var getDomGroup = function(urlStr) {
+  var getURLgroup = function(urlStr) {
     if (/^chrome/i.test(urlStr)) { return '#chrome' } 
     if (/^about/i.test(urlStr)) { return '#about' }
     if (/^file/i.test(urlStr)) { return '#file' }
@@ -71,7 +71,7 @@ chrome.browserAction.onClicked.addListener(function() {
       var dataObj = {
         tabId: tabElem.id,
         fullURL: tabElem.url,
-        domGroup: getDomGroup(tabElem.url)
+        domGroup: getURLgroup(tabElem.url)
       }
       return dataObj
     });
@@ -101,13 +101,9 @@ chrome.browserAction.onClicked.addListener(function() {
     var sortedByURL = tabsArrSorter(tabObjsArr)
     return moveTheTabs(sortedByURL)
   }
-
   
-  
-  chrome.tabs.query({ windowType: 'normal', pinned: true }, 
+  chrome.tabs.query({ windowType: 'normal', windowId: chrome.windows.WINDOW_ID_CURRENT, pinned: true },
     function(pinned) { offsetForPinnedTabs = pinned.length; });
-  chrome.tabs.query({ windowType: 'normal', pinned: false }, tabsanity);
+  chrome.tabs.query({ windowType: 'normal', windowId: chrome.windows.WINDOW_ID_CURRENT, pinned: false }, tabsanity);
 }); // end addListener
-
-
 // For Testing: module.exports = getDomGroup

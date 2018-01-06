@@ -34,7 +34,7 @@ I'd hope it's pretty self-explanatory?
 ---
 #### Future Improvements:
 * Handle IPv6 Addresses
-
+* Stop Movement if tabs are already sorted
 ___
 
 *** Copyright and licensed under [the MIT license](/LICENSE) ***
