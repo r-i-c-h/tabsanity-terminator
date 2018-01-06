@@ -2,18 +2,18 @@ chrome.browserAction.onClicked.addListener(function() {
   var offsetForPinnedTabs = 0
 
   var getDomGroup = function(urlStr) {
-    if (/^chrome/i.test(urlStr)) { return 'chrome' }
-    if (/^about/i.test(urlStr)) { return 'about' }
-    if (/^file/i.test(urlStr)) { return 'file' }
+    if (/^chrome/i.test(urlStr)) { return '#chrome' } 
+    if (/^about/i.test(urlStr)) { return '#about' }
+    if (/^file/i.test(urlStr)) { return '#file' }
     if (/^(https?:\/\/)?localhost/i.test(urlStr)) {
-      return 'localhost'
+      return '00localhost'
     }
     if (/^(https?:\/\/)?127\.\d[^:/]+/i.test(urlStr)) {
       return urlStr.match(/^https?:\/\/(127\.\d[^:/]+)/i)[1] // Eliminates Port #s...
     }
-
-    var getFirstGroup = function(str) {
-      var txt = str
+    
+    var getURLStart = function(str) {
+      var txt = str.toLowerCase()
       txt = txt.replace(/^((https?|ftp):?)?(\/+)?(www\.)?/i, '') // Remove URL Start
       // Test for user:pass@somedomain.com...
       if (/^[^:]+:[^@]+@/i.test(txt)) {
@@ -22,54 +22,52 @@ chrome.browserAction.onClicked.addListener(function() {
       txt = txt.replace(/[/:].*$/gi, '') // Kill all after next '/' or ':' (to nuke Port#s)
       return txt
     }
+    
+    var urlStartGroup = getURLStart(urlStr)
+    var piecesArr = urlStartGroup.split('.')
+    var groupSize = piecesArr.length
+    if (groupSize === 2) { return urlStartGroup }
+    if (groupSize === 3) {
+      var lastPc = piecesArr[2]
+      var middlePcLngth = piecesArr[1].length
 
-    var firstGroup = getFirstGroup(urlStr)
-    var groupPiecesArr = firstGroup.split('.')
-    if (groupPiecesArr.length === 2) {
-      return firstGroup
-    }
-    if (groupPiecesArr.length === 3) {
-      // Look for obvious endings in 3rd piece:
-      if (/com|net|org/i.test(groupPiecesArr[2])) {
-        return groupPiecesArr.slice(-2).join('.')
+      if (/com|net|org/i.test(lastPc)) {
+        return piecesArr.slice(-2).join('.')
       }
-      // The last of 3 pieces is 2characters
-      if (groupPiecesArr[2].length === 2) {
-        // Is it ____.xx.xx or ____.xxx.xx pattern?
-        if (groupPiecesArr[1].length === 2 || groupPiecesArr[1].length === 3) {
-          return groupPiecesArr.join('.')
+      if (lastPc.length === 2) {
+        if (middlePcLength === 2 || middlePcLength === 3) {
+          return piecesArr.join('.')
         }
-        // ___.xx - Two character TLD ?
-        return groupPiecesArr.slice(-2).join('.')
+        return piecesArr.slice(-2).join('.')
       }
     }
-    if (groupPiecesArr.length >= 4) {
+    if (groupSize >= 4) {
       /** Big Assumption Here **/
-      return groupPiecesArr.slice(-3).join('.')
+      return piecesArr.slice(-3).join('.')
     }
 
-    // ??? Did not hit a matched 'if' condition. ???
-    return firstGroup
+    return urlStartGroup
   }
 
-  var uniquifyTabs = function(arr) {
-    var hashObj = {} 
-    var outputArr = []
-    for (var i = 0; i < arr.length; i++) {
-      var uriStr = encodeURIComponent(arr[i].url)
-      if (!hashObj[uriStr]) {
-        hashObj[uriStr] = 1
-        outputArr.push(arr[i])
-      } else {
-        chrome.tabs.remove(arr[i].id);
+  var makeUniqTabObjsArr = function(arrOfTabs) {
+    var uniquifyTabs = function(arr) {
+      var hashObj = {} 
+      var outputArr = []
+      for (var i = 0; i < arr.length; i++) {
+        var uriStr = encodeURIComponent(arr[i].url)
+        if (!hashObj[uriStr]) {
+          hashObj[uriStr] = 1
+          outputArr.push(arr[i])
+        } else {
+          chrome.tabs.remove(arr[i].id);
+        }
       }
+      return outputArr
     }
-    return outputArr
-  }
 
-  var makeTabObjsArr = function(arrOfTabs) {
-    var uniqueList = uniquifyTabs(arrOfTabs.slice());
-    return uniqueList.map(function(tabElem) {
+    var uniqueArr = uniquifyTabs(arrOfTabs.slice());
+    
+    return uniqueArr.map(function(tabElem) {
       var dataObj = {
         tabId: tabElem.id,
         fullURL: tabElem.url,
@@ -79,28 +77,36 @@ chrome.browserAction.onClicked.addListener(function() {
     });
   };
 
-  var tabShifter = function(arrOfTabs) {
-    var tabObjsArr = makeTabObjsArr(arrOfTabs)
-    var sortedByURL = tabObjsArr.slice().sort(function(a, b) {
-      if (a.domGroup < b.domGroup) { return -1 }
-      if (a.domGroup > b.domGroup) { return 1 }
-      if (a.domGroup === b.domGroup) {
-        if (a.fullURL < b.fullURL) { return -1 }
-        if (a.fullURL > b.fullURL) { return 1 }
+  var tabsArrSorter = function(arrOfTabObj) {
+    return arrOfTabObj.slice().sort(function(a,b){
+      var domSort = (a.domGroup).localeCompare(b.domGroup)
+      if (domSort === 0){
+        return (a.fullURL).localeCompare(b.fullURL)
       }
-      return 0;
+      return domSort;
     })
+  }
 
-    for (var i = 0; i < sortedByURL.length; i++) {
-      chrome.tabs.move(sortedByURL[i].tabId, {
+  var moveTheTabs = function(sortedArr) {
+    for (var i = 0; i < sortedArr.length; i++) {
+      chrome.tabs.move(sortedArr[i].tabId, {
         index: i + offsetForPinnedTabs
       });
     }
-  };
+    return null;
+  }
+  
+  var tabsanity = function(arrOfTabs){
+    var tabObjsArr = makeUniqTabObjsArr(arrOfTabs)
+    var sortedByURL = tabsArrSorter(tabObjsArr)
+    return moveTheTabs(sortedByURL)
+  }
 
+  
+  
   chrome.tabs.query({ windowType: 'normal', pinned: true }, 
     function(pinned) { offsetForPinnedTabs = pinned.length; });
-  chrome.tabs.query({ windowType: 'normal', pinned: false }, tabShifter);
+  chrome.tabs.query({ windowType: 'normal', pinned: false }, tabsanity);
 }); // end addListener
 
 

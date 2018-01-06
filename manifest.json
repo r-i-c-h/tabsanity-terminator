@@ -3,7 +3,7 @@
   "name": "Tabsanity Terminator",
   "author":"Rich Werden (@r-i-c-h)",
   "version": "0.2",
-  "description": "Removes Duplicates + Groups Tabs by URL",
+  "description": "Removes Duplicate Tabs + Groups Tabs by URL",
   "icons": {
     "128": "ico_128.png",
     "48": "ico_48.png",
