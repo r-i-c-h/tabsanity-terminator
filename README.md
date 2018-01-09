@@ -35,6 +35,9 @@ I'd hope it's pretty self-explanatory?
 #### Future Improvements:
 * Handle IPv6 Addresses
 * Stop Movement if tabs are already sorted
+* Add Options Page/Settings
+  * Only de-duplicate tabs, don't sort
+  * Make extensions action apply to all windows instead of one
 ___
 
 *** Copyright and licensed under [the MIT license](/LICENSE) ***
