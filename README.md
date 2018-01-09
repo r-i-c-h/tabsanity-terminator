@@ -1,5 +1,5 @@
 # Tabsanity Terminator
-=====================
+======================
 
 An open-source Google Chrome Extension by [Rich Werden][richsite] to save you from redundant/duplicate tabs and disorganized tab groupings.
 
