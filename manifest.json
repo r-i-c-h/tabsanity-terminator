@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Tabsanity Terminator",
   "author":"Rich Werden (@r-i-c-h)",
-  "version": "0.2",
+  "version": "0.21",
   "description": "Removes Duplicate Tabs + Groups Tabs by URL",
   "icons": {
     "128": "ico_128.png",
