@@ -29,7 +29,7 @@ chrome.browserAction.onClicked.addListener(function() {
     if (groupSize === 2) { return urlStartGroup }
     if (groupSize === 3) {
       var lastPc = piecesArr[2]
-      var middlePcLngth = piecesArr[1].length
+      var middlePcLength = piecesArr[1].length
 
       if (/com|net|org/i.test(lastPc)) {
         return piecesArr.slice(-2).join('.')
